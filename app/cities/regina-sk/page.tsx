@@ -21,7 +21,22 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/cities/regina-sk",
   },
+  openGraph: {
+    title: "Auto Repair Shops in Regina, SK",
+    description:
+      "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
+    url: "/cities/regina-sk",
+    siteName: "FindAMechanic.ca",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Auto Repair Shops in Regina, SK",
+    description:
+      "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
+  },
 };
+
 
 
 const shops: Shop[] = [
