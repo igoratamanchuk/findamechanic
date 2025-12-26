@@ -11,6 +11,9 @@ type Shop = {
   description?: string;
 };
 
+import type { Metadata } from "next";
+
+
 const SHOPS: Shop[] = [
   {
     slug: "sample-auto-repair",
@@ -23,6 +26,40 @@ const SHOPS: Shop[] = [
     description: "General repair and diagnostics in Regina.",
   },
 ];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const shop = SHOPS.find((s) => s.slug === slug);
+
+  if (!shop) {
+    return {
+      title: "Shop not found",
+      description: "Auto repair shop profile not found.",
+      robots: { index: false, follow: true },
+    };
+  }
+
+  return {
+    title: `${shop.name} (Regina, SK)`,
+    description: `${shop.name} in Regina, SK. Services: ${shop.services.join(
+      ", "
+    )}. Address: ${shop.address}. Call or get directions.`,
+    alternates: {
+      canonical: `/regina-sk/shops/${shop.slug}`,
+    },
+    openGraph: {
+      title: `${shop.name} (Regina, SK)`,
+      description: `${shop.name} in Regina, SK. Services: ${shop.services.join(
+        ", "
+      )}.`,
+      url: `/regina-sk/shops/${shop.slug}`,
+    },
+  };
+}
+
 
 export default async function ShopPage({
   params,

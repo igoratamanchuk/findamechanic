@@ -12,6 +12,18 @@ type Shop = {
   description?: string;
 };
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Auto Repair Shops in Regina, SK",
+  description:
+    "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
+  alternates: {
+    canonical: "/cities/regina-sk",
+  },
+};
+
+
 const shops: Shop[] = [
   {
     name: "Sample Auto Repair",
