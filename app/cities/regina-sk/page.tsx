@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 type Shop = {
   name: string;
@@ -12,32 +13,37 @@ type Shop = {
   description?: string;
 };
 
-import type { Metadata } from "next";
+// ✅ Change this later to: "https://findamechanic.ca"
+const SITE_URL = "https://findamechanic-b14p.vercel.app";
+
+const CITY_NAME = "Regina";
+const PROVINCE = "SK";
+const CITY_SLUG = "regina-sk";
+
+const title = `Auto Repair Shops in ${CITY_NAME}, ${PROVINCE} | FindAMechanic.ca`;
+const description =
+  "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.";
 
 export const metadata: Metadata = {
-  title: "Auto Repair Shops in Regina, SK",
-  description:
-    "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
+  title,
+  description,
+  robots: { index: true, follow: true },
   alternates: {
-    canonical: "/cities/regina-sk",
+    canonical: `${SITE_URL}/cities/${CITY_SLUG}`,
   },
   openGraph: {
-    title: "Auto Repair Shops in Regina, SK",
-    description:
-      "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
-    url: "/cities/regina-sk",
+    title,
+    description,
+    url: `${SITE_URL}/cities/${CITY_SLUG}`,
     siteName: "FindAMechanic.ca",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Auto Repair Shops in Regina, SK",
-    description:
-      "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
+    title,
+    description,
   },
 };
-
-
 
 const shops: Shop[] = [
   {
@@ -66,7 +72,7 @@ export default function ReginaDirectory() {
       >
         <div>
           <h1 style={{ fontSize: 30, fontWeight: 900 }}>
-            Auto Repair Shops in Regina, SK
+            Auto Repair Shops in {CITY_NAME}, {PROVINCE}
           </h1>
           <p style={{ marginTop: 6, opacity: 0.85 }}>
             Browse local mechanics by service and specialty. (MVP — more shops
@@ -98,7 +104,7 @@ export default function ReginaDirectory() {
           {shops.map((s) => (
             <Link
               key={s.slug}
-              href={`/regina-sk/shops/${s.slug}`}
+              href={`/${CITY_SLUG}/shops/${s.slug}`}
               style={{
                 textDecoration: "none",
                 color: "inherit",
