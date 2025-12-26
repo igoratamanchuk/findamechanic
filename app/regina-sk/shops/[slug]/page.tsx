@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 type Shop = {
   slug: string;
@@ -10,9 +11,6 @@ type Shop = {
   specialties: string[];
   description?: string;
 };
-
-import type { Metadata } from "next";
-
 
 const SHOPS: Shop[] = [
   {
@@ -26,6 +24,7 @@ const SHOPS: Shop[] = [
     description: "General repair and diagnostics in Regina.",
   },
 ];
+
 export async function generateMetadata({
   params,
 }: {
@@ -43,7 +42,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${shop.name} (Regina, SK)`,
+    title: `${shop.name} (Regina, SK) | FindAMechanic.ca`,
     description: `${shop.name} in Regina, SK. Services: ${shop.services.join(
       ", "
     )}. Address: ${shop.address}. Call or get directions.`,
@@ -56,10 +55,18 @@ export async function generateMetadata({
         ", "
       )}.`,
       url: `/regina-sk/shops/${shop.slug}`,
+      siteName: "FindAMechanic.ca",
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title: `${shop.name} (Regina, SK)`,
+      description: `${shop.name} in Regina, SK. Services: ${shop.services.join(
+        ", "
+      )}.`,
     },
   };
-}
-
+} // ✅ THIS was missing in your file
 
 export default async function ShopPage({
   params,
