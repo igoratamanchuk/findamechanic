@@ -5,21 +5,20 @@ import { REGINA_CITY, REGINA_SHOPS } from "@/data/shops/regina";
 
 const CANONICAL_PATH = `/cities/${REGINA_CITY.slug}`;
 const CANONICAL_URL = `${SITE_URL}${CANONICAL_PATH}`;
+const SITE_NAME = "FindAMechanic.ca";
 
 export const metadata: Metadata = {
-  title: `Auto Repair Shops in ${REGINA_CITY.name}, ${REGINA_CITY.region} | FindAMechanic.ca`,
+  title: `Auto Repair Shops in ${REGINA_CITY.name}, ${REGINA_CITY.region} | ${SITE_NAME}`,
   description:
     "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
   robots: { index: true, follow: true },
-  alternates: {
-    canonical: CANONICAL_URL,
-  },
+  alternates: { canonical: CANONICAL_URL },
   openGraph: {
     title: `Auto Repair Shops in ${REGINA_CITY.name}, ${REGINA_CITY.region}`,
     description:
       "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
     url: CANONICAL_URL,
-    siteName: "FindAMechanic.ca",
+    siteName: SITE_NAME,
     type: "website",
   },
   twitter: {

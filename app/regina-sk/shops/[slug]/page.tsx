@@ -1,53 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { SITE_URL } from "@/lib/site";
-import { REGINA_CITY, REGINA_SHOPS, getReginaShopBySlug } from "@/data/shops/regina";
+
+import { absUrl } from "@/lib/site";
+import { REGINA_CITY, REGINA_SHOPS } from "@/data/shops/regina";
 
 const SITE_NAME = "FindAMechanic.ca";
 
-function canonicalUrlForShop(slug: string) {
-  return `${SITE_URL}/${REGINA_CITY.slug}/shops/${slug}`;
-}
-
-function sanitizePhoneForTel(phone: string) {
-  const cleaned = phone.replace(/[^\d+]/g, "");
-  return cleaned.startsWith("+") ? cleaned : `+1${cleaned}`;
-}
-
-function shopJsonLd(shop: (typeof REGINA_SHOPS)[number]) {
-  const pageUrl = canonicalUrlForShop(shop.slug);
-  const tel = shop.phone ? sanitizePhoneForTel(shop.phone) : undefined;
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "AutoRepair",
-    "@id": `${pageUrl}#business`,
-    name: shop.name,
-    url: pageUrl,
-    telephone: tel,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: shop.address,
-      addressLocality: REGINA_CITY.name,
-      addressRegion: REGINA_CITY.region,
-      addressCountry: REGINA_CITY.country,
-    },
-    areaServed: {
-      "@type": "City",
-      name: REGINA_CITY.name,
-    },
-    description: shop.description ?? undefined,
-    makesOffer: shop.services?.length
-      ? shop.services.map((service) => ({
-          "@type": "Offer",
-          itemOffered: {
-            "@type": "Service",
-            name: service,
-          },
-        }))
-      : undefined,
-    keywords: shop.services?.length ? shop.services.join(", ") : undefined,
-  };
+function getShop(slug: string) {
+  return REGINA_SHOPS.find((s) => s.slug === slug);
 }
 
 export async function generateMetadata({
@@ -56,9 +16,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const shop = getShop(slug);
 
-  const shop = getReginaShopBySlug(slug);
-  const canonicalUrl = canonicalUrlForShop(slug);
+  const canonicalPath = `/${REGINA_CITY.slug}/shops/${slug}`;
+  const canonicalUrl = absUrl(canonicalPath);
 
   if (!shop) {
     return {
@@ -69,31 +30,27 @@ export async function generateMetadata({
     };
   }
 
-  const title = `${shop.name} (${REGINA_CITY.name}, ${REGINA_CITY.region}) | ${SITE_NAME}`;
-  const ogTitle = `${shop.name} (${REGINA_CITY.name}, ${REGINA_CITY.region})`;
-  const description = `${shop.name} in ${REGINA_CITY.name}, ${REGINA_CITY.region}. Services: ${shop.services.join(
+  const title = `${shop.name} (${REGINA_CITY.name})`;
+  const description = `${shop.name} in Regina, SK. Services: ${shop.services.join(
     ", "
   )}. Address: ${shop.address}. Call or get directions.`;
-  const shortDescription = `${shop.name} in ${REGINA_CITY.name}, ${REGINA_CITY.region}. Services: ${shop.services.join(
-    ", "
-  )}.`;
 
   return {
-    title,
+    title: `${title} | ${SITE_NAME}`,
     description,
     robots: { index: true, follow: true },
     alternates: { canonical: canonicalUrl },
     openGraph: {
-      title: ogTitle,
-      description: shortDescription,
+      title,
+      description,
       url: canonicalUrl,
       siteName: SITE_NAME,
       type: "website",
     },
     twitter: {
       card: "summary",
-      title: ogTitle,
-      description: shortDescription,
+      title,
+      description,
     },
   };
 }
@@ -104,8 +61,7 @@ export default async function ShopPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-
-  const shop = getReginaShopBySlug(slug);
+  const shop = getShop(slug);
 
   if (!shop) {
     return (
@@ -125,16 +81,8 @@ export default async function ShopPage({
     shop.address
   )}`;
 
-  const telHref = shop.phone ? `tel:${sanitizePhoneForTel(shop.phone)}` : null;
-  const jsonLd = shopJsonLd(shop);
-
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
       <Link href={`/cities/${REGINA_CITY.slug}`} style={{ textDecoration: "none" }}>
         ← Back to {REGINA_CITY.name}
       </Link>
@@ -146,9 +94,9 @@ export default async function ShopPage({
       <div style={{ marginTop: 8, opacity: 0.85 }}>{shop.address}</div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-        {shop.phone && telHref ? (
+        {shop.phone ? (
           <a
-            href={telHref}
+            href={`tel:${shop.phone}`}
             style={{
               padding: "10px 14px",
               borderRadius: 12,
