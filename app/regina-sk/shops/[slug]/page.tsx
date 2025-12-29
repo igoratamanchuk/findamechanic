@@ -1,10 +1,20 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { SITE_URL } from "@/lib/site";
+
+/**
+ * Configuration (easy to reuse when you add more cities)
+ */
+const CITY_SLUG = "regina-sk";
+const CITY_NAME = "Regina";
+const REGION = "SK";
+const COUNTRY = "CA";
+const SITE_NAME = "FindAMechanic.ca";
 
 type Shop = {
   slug: string;
   name: string;
-  address: string;
+  address: string; // For MVP it's a single string; we can later split into fields
   phone?: string;
   website?: string;
   services: string[];
@@ -12,6 +22,10 @@ type Shop = {
   description?: string;
 };
 
+/**
+ * Data (MVP)
+ * Later we can move this to /data/shops/regina.ts and reuse in sitemap, etc.
+ */
 const SHOPS: Shop[] = [
   {
     slug: "sample-auto-repair",
@@ -25,49 +39,120 @@ const SHOPS: Shop[] = [
   },
 ];
 
+/**
+ * Helpers
+ */
+function getShopBySlug(slug: string): Shop | undefined {
+  return SHOPS.find((s) => s.slug === slug);
+}
+
+function canonicalUrlForShop(slug: string) {
+  return `${SITE_URL}/${CITY_SLUG}/shops/${slug}`;
+}
+
+function canonicalPathForShop(slug: string) {
+  return `/${CITY_SLUG}/shops/${slug}`;
+}
+
+function sanitizePhoneForTel(phone: string) {
+  // keep digits and plus only
+  const cleaned = phone.replace(/[^\d+]/g, "");
+  return cleaned.startsWith("+") ? cleaned : `+1${cleaned}`; // Canada/US default
+}
+
+function shopJsonLd(shop: Shop) {
+  const pageUrl = canonicalUrlForShop(shop.slug);
+  const tel = shop.phone ? sanitizePhoneForTel(shop.phone) : undefined;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "AutoRepair",
+    "@id": `${pageUrl}#business`,
+    name: shop.name,
+    url: pageUrl,
+    telephone: tel,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: shop.address, // MVP: single string
+      addressLocality: CITY_NAME,
+      addressRegion: REGION,
+      addressCountry: COUNTRY,
+    },
+    areaServed: {
+      "@type": "City",
+      name: CITY_NAME,
+    },
+    description: shop.description ?? undefined,
+    makesOffer: shop.services?.length
+      ? shop.services.map((service) => ({
+          "@type": "Offer",
+          itemOffered: {
+            "@type": "Service",
+            name: service,
+          },
+        }))
+      : undefined,
+    keywords: shop.services?.length ? shop.services.join(", ") : undefined,
+  };
+}
+
+/**
+ * SEO / Metadata (dynamic per shop)
+ */
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const shop = SHOPS.find((s) => s.slug === slug);
+
+  const shop = getShopBySlug(slug);
+  const canonicalUrl = canonicalUrlForShop(slug);
 
   if (!shop) {
     return {
-      title: "Shop not found",
+      title: `Shop not found | ${SITE_NAME}`,
       description: "Auto repair shop profile not found.",
       robots: { index: false, follow: true },
+      alternates: { canonical: canonicalUrl },
     };
   }
 
+  const title = `${shop.name} (${CITY_NAME}, ${REGION}) | ${SITE_NAME}`;
+  const ogTitle = `${shop.name} (${CITY_NAME}, ${REGION})`;
+  const description = `${shop.name} in ${CITY_NAME}, ${REGION}. Services: ${shop.services.join(
+    ", "
+  )}. Address: ${shop.address}. Call or get directions.`;
+
+  const shortDescription = `${shop.name} in ${CITY_NAME}, ${REGION}. Services: ${shop.services.join(
+    ", "
+  )}.`;
+
   return {
-    title: `${shop.name} (Regina, SK) | FindAMechanic.ca`,
-    description: `${shop.name} in Regina, SK. Services: ${shop.services.join(
-      ", "
-    )}. Address: ${shop.address}. Call or get directions.`,
+    title,
+    description,
+    robots: { index: true, follow: true },
     alternates: {
-      canonical: `/regina-sk/shops/${shop.slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
-      title: `${shop.name} (Regina, SK)`,
-      description: `${shop.name} in Regina, SK. Services: ${shop.services.join(
-        ", "
-      )}.`,
-      url: `/regina-sk/shops/${shop.slug}`,
-      siteName: "FindAMechanic.ca",
+      title: ogTitle,
+      description: shortDescription,
+      url: canonicalUrl,
+      siteName: SITE_NAME,
       type: "website",
     },
     twitter: {
       card: "summary",
-      title: `${shop.name} (Regina, SK)`,
-      description: `${shop.name} in Regina, SK. Services: ${shop.services.join(
-        ", "
-      )}.`,
+      title: ogTitle,
+      description: shortDescription,
     },
   };
-} // ✅ THIS was missing in your file
+}
 
+/**
+ * Page
+ */
 export default async function ShopPage({
   params,
 }: {
@@ -75,7 +160,7 @@ export default async function ShopPage({
 }) {
   const { slug } = await params;
 
-  const shop = SHOPS.find((s) => s.slug === slug);
+  const shop = getShopBySlug(slug);
 
   if (!shop) {
     return (
@@ -95,8 +180,17 @@ export default async function ShopPage({
     shop.address
   )}`;
 
+  const telHref = shop.phone ? `tel:${sanitizePhoneForTel(shop.phone)}` : null;
+  const jsonLd = shopJsonLd(shop);
+
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
+      {/* JSON-LD Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       <Link href="/cities/regina-sk" style={{ textDecoration: "none" }}>
         ← Back to Regina
       </Link>
@@ -108,9 +202,9 @@ export default async function ShopPage({
       <div style={{ marginTop: 8, opacity: 0.85 }}>{shop.address}</div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-        {shop.phone ? (
+        {shop.phone && telHref ? (
           <a
-            href={`tel:${shop.phone}`}
+            href={telHref}
             style={{
               padding: "10px 14px",
               borderRadius: 12,
@@ -199,6 +293,9 @@ export default async function ShopPage({
           )}
         </div>
       </section>
+
+      {/* Optional: Debug canonical path (remove later) */}
+      {/* <pre style={{ marginTop: 24, opacity: 0.6 }}>{canonicalPathForShop(shop.slug)}</pre> */}
     </main>
   );
 }
