@@ -1,66 +1,20 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
+import { REGINA_CITY, REGINA_SHOPS, getReginaShopBySlug } from "@/data/shops/regina";
 
-/**
- * Configuration (easy to reuse when you add more cities)
- */
-const CITY_SLUG = "regina-sk";
-const CITY_NAME = "Regina";
-const REGION = "SK";
-const COUNTRY = "CA";
 const SITE_NAME = "FindAMechanic.ca";
 
-type Shop = {
-  slug: string;
-  name: string;
-  address: string; // For MVP it's a single string; we can later split into fields
-  phone?: string;
-  website?: string;
-  services: string[];
-  specialties: string[];
-  description?: string;
-};
-
-/**
- * Data (MVP)
- * Later we can move this to /data/shops/regina.ts and reuse in sitemap, etc.
- */
-const SHOPS: Shop[] = [
-  {
-    slug: "sample-auto-repair",
-    name: "Sample Auto Repair",
-    address: "123 Example St, Regina, SK",
-    phone: "306-555-1234",
-    website: "https://example.com",
-    services: ["Brakes", "Diagnostics", "Tires"],
-    specialties: ["Domestic"],
-    description: "General repair and diagnostics in Regina.",
-  },
-];
-
-/**
- * Helpers
- */
-function getShopBySlug(slug: string): Shop | undefined {
-  return SHOPS.find((s) => s.slug === slug);
-}
-
 function canonicalUrlForShop(slug: string) {
-  return `${SITE_URL}/${CITY_SLUG}/shops/${slug}`;
-}
-
-function canonicalPathForShop(slug: string) {
-  return `/${CITY_SLUG}/shops/${slug}`;
+  return `${SITE_URL}/${REGINA_CITY.slug}/shops/${slug}`;
 }
 
 function sanitizePhoneForTel(phone: string) {
-  // keep digits and plus only
   const cleaned = phone.replace(/[^\d+]/g, "");
-  return cleaned.startsWith("+") ? cleaned : `+1${cleaned}`; // Canada/US default
+  return cleaned.startsWith("+") ? cleaned : `+1${cleaned}`;
 }
 
-function shopJsonLd(shop: Shop) {
+function shopJsonLd(shop: (typeof REGINA_SHOPS)[number]) {
   const pageUrl = canonicalUrlForShop(shop.slug);
   const tel = shop.phone ? sanitizePhoneForTel(shop.phone) : undefined;
 
@@ -73,14 +27,14 @@ function shopJsonLd(shop: Shop) {
     telephone: tel,
     address: {
       "@type": "PostalAddress",
-      streetAddress: shop.address, // MVP: single string
-      addressLocality: CITY_NAME,
-      addressRegion: REGION,
-      addressCountry: COUNTRY,
+      streetAddress: shop.address,
+      addressLocality: REGINA_CITY.name,
+      addressRegion: REGINA_CITY.region,
+      addressCountry: REGINA_CITY.country,
     },
     areaServed: {
       "@type": "City",
-      name: CITY_NAME,
+      name: REGINA_CITY.name,
     },
     description: shop.description ?? undefined,
     makesOffer: shop.services?.length
@@ -96,9 +50,6 @@ function shopJsonLd(shop: Shop) {
   };
 }
 
-/**
- * SEO / Metadata (dynamic per shop)
- */
 export async function generateMetadata({
   params,
 }: {
@@ -106,7 +57,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
 
-  const shop = getShopBySlug(slug);
+  const shop = getReginaShopBySlug(slug);
   const canonicalUrl = canonicalUrlForShop(slug);
 
   if (!shop) {
@@ -118,13 +69,12 @@ export async function generateMetadata({
     };
   }
 
-  const title = `${shop.name} (${CITY_NAME}, ${REGION}) | ${SITE_NAME}`;
-  const ogTitle = `${shop.name} (${CITY_NAME}, ${REGION})`;
-  const description = `${shop.name} in ${CITY_NAME}, ${REGION}. Services: ${shop.services.join(
+  const title = `${shop.name} (${REGINA_CITY.name}, ${REGINA_CITY.region}) | ${SITE_NAME}`;
+  const ogTitle = `${shop.name} (${REGINA_CITY.name}, ${REGINA_CITY.region})`;
+  const description = `${shop.name} in ${REGINA_CITY.name}, ${REGINA_CITY.region}. Services: ${shop.services.join(
     ", "
   )}. Address: ${shop.address}. Call or get directions.`;
-
-  const shortDescription = `${shop.name} in ${CITY_NAME}, ${REGION}. Services: ${shop.services.join(
+  const shortDescription = `${shop.name} in ${REGINA_CITY.name}, ${REGINA_CITY.region}. Services: ${shop.services.join(
     ", "
   )}.`;
 
@@ -132,9 +82,7 @@ export async function generateMetadata({
     title,
     description,
     robots: { index: true, follow: true },
-    alternates: {
-      canonical: canonicalUrl,
-    },
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title: ogTitle,
       description: shortDescription,
@@ -150,9 +98,6 @@ export async function generateMetadata({
   };
 }
 
-/**
- * Page
- */
 export default async function ShopPage({
   params,
 }: {
@@ -160,7 +105,7 @@ export default async function ShopPage({
 }) {
   const { slug } = await params;
 
-  const shop = getShopBySlug(slug);
+  const shop = getReginaShopBySlug(slug);
 
   if (!shop) {
     return (
@@ -168,8 +113,8 @@ export default async function ShopPage({
         <h1 style={{ fontSize: 26, fontWeight: 900 }}>Shop not found</h1>
         <p style={{ opacity: 0.8, marginTop: 8 }}>Slug: {slug}</p>
         <div style={{ marginTop: 14 }}>
-          <Link href="/cities/regina-sk" style={{ textDecoration: "none" }}>
-            ← Back to Regina
+          <Link href={`/cities/${REGINA_CITY.slug}`} style={{ textDecoration: "none" }}>
+            ← Back to {REGINA_CITY.name}
           </Link>
         </div>
       </main>
@@ -185,14 +130,13 @@ export default async function ShopPage({
 
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
-      {/* JSON-LD Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <Link href="/cities/regina-sk" style={{ textDecoration: "none" }}>
-        ← Back to Regina
+      <Link href={`/cities/${REGINA_CITY.slug}`} style={{ textDecoration: "none" }}>
+        ← Back to {REGINA_CITY.name}
       </Link>
 
       <h1 style={{ fontSize: 34, fontWeight: 900, marginTop: 12 }}>
@@ -293,9 +237,6 @@ export default async function ShopPage({
           )}
         </div>
       </section>
-
-      {/* Optional: Debug canonical path (remove later) */}
-      {/* <pre style={{ marginTop: 24, opacity: 0.6 }}>{canonicalPathForShop(shop.slug)}</pre> */}
     </main>
   );
 }
