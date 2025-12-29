@@ -117,14 +117,7 @@ export const REGINA_SHOPS: Shop[] = [
     specialties: ["Domestic", "Import"],
     description: "Listed in AAA repair locations for Regina.",
   },
-  {
-    slug: "bennett-dunlop-ford-service",
-    name: "Bennett Dunlop Ford",
-    address: "770 Broad St, Regina, SK S4P 3N4",
-    services: ["Service department", "Maintenance", "Repairs"],
-    specialties: ["Ford"],
-    description: "Listed in AAA repair locations for Regina.",
-  },
+  
     {
     slug: "midas-albert-st-n",
     name: "Midas Auto Service Experts",
