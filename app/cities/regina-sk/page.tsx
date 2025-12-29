@@ -1,20 +1,21 @@
+// app/cities/regina-sk/page.tsx
 import Link from "next/link";
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
-import { REGINA_CITY, REGINA_SHOPS } from "@/data/shops/regina";
+import { REGINA_SHOPS } from "@/data/shops/regina";
 
-const CANONICAL_PATH = `/cities/${REGINA_CITY.slug}`;
-const CANONICAL_URL = `${SITE_URL}${CANONICAL_PATH}`;
 const SITE_NAME = "FindAMechanic.ca";
+const CITY_PATH = "/cities/regina-sk";
+const CANONICAL_URL = `${SITE_URL}${CITY_PATH}`;
 
 export const metadata: Metadata = {
-  title: `Auto Repair Shops in ${REGINA_CITY.name}, ${REGINA_CITY.region} | ${SITE_NAME}`,
+  title: "Auto Repair Shops in Regina, SK | FindAMechanic.ca",
   description:
     "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
   robots: { index: true, follow: true },
   alternates: { canonical: CANONICAL_URL },
   openGraph: {
-    title: `Auto Repair Shops in ${REGINA_CITY.name}, ${REGINA_CITY.region}`,
+    title: "Auto Repair Shops in Regina, SK",
     description:
       "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
     url: CANONICAL_URL,
@@ -23,13 +24,18 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: `Auto Repair Shops in ${REGINA_CITY.name}, ${REGINA_CITY.region}`,
+    title: "Auto Repair Shops in Regina, SK",
     description:
       "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
   },
 };
 
-export default function ReginaDirectory() {
+export default function ReginaDirectoryPage() {
+  const shops = REGINA_SHOPS;
+
+  // Optional: sort A→Z by name
+  const sorted = [...shops].sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
       <header
@@ -38,15 +44,19 @@ export default function ReginaDirectory() {
           justifyContent: "space-between",
           gap: 12,
           flexWrap: "wrap",
+          alignItems: "flex-start",
         }}
       >
         <div>
           <h1 style={{ fontSize: 30, fontWeight: 900 }}>
-            Auto Repair Shops in {REGINA_CITY.name}, {REGINA_CITY.region}
+            Auto Repair Shops in Regina, SK
           </h1>
           <p style={{ marginTop: 6, opacity: 0.85 }}>
             Browse local mechanics by service and specialty. (MVP — more shops
             coming.)
+          </p>
+          <p style={{ marginTop: 6, opacity: 0.7, fontSize: 14 }}>
+            Showing {sorted.length} shop{sorted.length === 1 ? "" : "s"}.
           </p>
         </div>
 
@@ -57,6 +67,7 @@ export default function ReginaDirectory() {
             border: "1px solid #ddd",
             borderRadius: 12,
             textDecoration: "none",
+            whiteSpace: "nowrap",
           }}
         >
           Home
@@ -67,14 +78,14 @@ export default function ReginaDirectory() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
             gap: 12,
           }}
         >
-          {REGINA_SHOPS.map((s) => (
+          {sorted.map((s) => (
             <Link
               key={s.slug}
-              href={`/${REGINA_CITY.slug}/shops/${s.slug}`}
+              href={`/regina-sk/shops/${s.slug}`}
               style={{
                 textDecoration: "none",
                 color: "inherit",
