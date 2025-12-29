@@ -1,40 +1,36 @@
-// app/cities/regina-sk/page.tsx
 import Link from "next/link";
 import type { Metadata } from "next";
+
 import { SITE_URL } from "@/lib/site";
-import { REGINA_SHOPS } from "@/data/shops/regina";
+import { REGINA_CITY, REGINA_SHOPS } from "@/data/shops/regina";
 
 const SITE_NAME = "FindAMechanic.ca";
-const CITY_PATH = "/cities/regina-sk";
-const CANONICAL_URL = `${SITE_URL}${CITY_PATH}`;
+
+const CANONICAL_PATH = `/cities/${REGINA_CITY.slug}`;
+const CANONICAL_URL = `${SITE_URL}${CANONICAL_PATH}`;
 
 export const metadata: Metadata = {
-  title: "Auto Repair Shops in Regina, SK | FindAMechanic.ca",
-  description:
-    "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
+  title: `Auto Repair Shops in ${REGINA_CITY.name} | ${SITE_NAME}`,
+  description: `Browse auto repair shops in ${REGINA_CITY.name}, ${REGINA_CITY.province}. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.`,
   robots: { index: true, follow: true },
   alternates: { canonical: CANONICAL_URL },
   openGraph: {
-    title: "Auto Repair Shops in Regina, SK",
-    description:
-      "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
+    title: `Auto Repair Shops in ${REGINA_CITY.name}`,
+    description: `Browse auto repair shops in (Regina, Saskatchewan). Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.`,
     url: CANONICAL_URL,
     siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Auto Repair Shops in Regina, SK",
-    description:
-      "Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.",
+    title: `Auto Repair Shops in ${REGINA_CITY.name}`,
+    description: `Browse auto repair shops in Regina, Saskatchewan. Compare services like brakes, tires, diagnostics and find the best local mechanic for your needs.`,
   },
 };
 
 export default function ReginaDirectoryPage() {
-  const shops = REGINA_SHOPS;
-
-  // Optional: sort A→Z by name
-  const sorted = [...shops].sort((a, b) => a.name.localeCompare(b.name));
+  // Always use the shared data source (no local sample list)
+  const shops = [...REGINA_SHOPS].sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <main style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
@@ -49,14 +45,14 @@ export default function ReginaDirectoryPage() {
       >
         <div>
           <h1 style={{ fontSize: 30, fontWeight: 900 }}>
-            Auto Repair Shops in Regina, SK
+            Auto Repair Shops in {REGINA_CITY.name}
           </h1>
           <p style={{ marginTop: 6, opacity: 0.85 }}>
             Browse local mechanics by service and specialty. (MVP — more shops
             coming.)
           </p>
-          <p style={{ marginTop: 6, opacity: 0.7, fontSize: 14 }}>
-            Showing {sorted.length} shop{sorted.length === 1 ? "" : "s"}.
+          <p style={{ marginTop: 8, opacity: 0.75, fontSize: 14 }}>
+            Showing {shops.length} shops
           </p>
         </div>
 
@@ -67,7 +63,6 @@ export default function ReginaDirectoryPage() {
             border: "1px solid #ddd",
             borderRadius: 12,
             textDecoration: "none",
-            whiteSpace: "nowrap",
           }}
         >
           Home
@@ -78,14 +73,14 @@ export default function ReginaDirectoryPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
             gap: 12,
           }}
         >
-          {sorted.map((s) => (
+          {shops.map((s) => (
             <Link
               key={s.slug}
-              href={`/regina-sk/shops/${s.slug}`}
+              href={`/${REGINA_CITY.slug}/shops/${s.slug}`}
               style={{
                 textDecoration: "none",
                 color: "inherit",
@@ -102,34 +97,36 @@ export default function ReginaDirectoryPage() {
                 {s.address}
               </div>
 
-              <div
-                style={{
-                  marginTop: 10,
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 6,
-                }}
-              >
-                {s.services.slice(0, 3).map((t) => (
-                  <span
-                    key={t}
-                    style={{
-                      fontSize: 12,
-                      border: "1px solid #eee",
-                      padding: "5px 10px",
-                      borderRadius: 999,
-                    }}
-                  >
-                    {t}
-                  </span>
-                ))}
+              {s.services?.length ? (
+                <div
+                  style={{
+                    marginTop: 10,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: 6,
+                  }}
+                >
+                  {s.services.slice(0, 3).map((t) => (
+                    <span
+                      key={t}
+                      style={{
+                        fontSize: 12,
+                        border: "1px solid #eee",
+                        padding: "5px 10px",
+                        borderRadius: 999,
+                      }}
+                    >
+                      {t}
+                    </span>
+                  ))}
 
-                {s.services.length > 3 ? (
-                  <span style={{ fontSize: 12, opacity: 0.7 }}>
-                    +{s.services.length - 3} more
-                  </span>
-                ) : null}
-              </div>
+                  {s.services.length > 3 ? (
+                    <span style={{ fontSize: 12, opacity: 0.7 }}>
+                      +{s.services.length - 3} more
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
 
               {s.description ? (
                 <div style={{ marginTop: 10, opacity: 0.85, fontSize: 14 }}>
