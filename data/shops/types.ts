@@ -18,7 +18,6 @@ export type ServiceTag =
   | "collision"
   | "fleet"
   | "commercial"
-  | "diesel"
   | "performance"
   | "restoration"
   | "truck"
@@ -43,19 +42,27 @@ export type SpecialtyTag =
   | "performance"
   | "restoration";
 
+export type City = {
+  slug: string;
+  name: string;
+  province: string;
+  country: string;
+};
+
 export type Shop = {
   slug: string;
   name: string;
   address: string;
+
   phone?: string;
   website?: string;
   neighborhood?: string;
 
   services: string[];
   specialties: string[];
+  description?: string;
 
+  // optional derived tags (computed by deriveTags)
   serviceTags?: ServiceTag[];
   specialtyTags?: SpecialtyTag[];
-
-  description?: string;
 };
