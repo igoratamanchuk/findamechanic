@@ -1,16 +1,11 @@
 // app/api/ai-shop-search/route.ts
 import { NextResponse } from "next/server";
-import OpenAI from "openai";
 
 import { REGINA_SHOPS } from "@/data/shops/regina";
 import { deriveTags } from "@/lib/shopTags";
 import type { ServiceTag, SpecialtyTag } from "@/data/shops/types";
 
 export const runtime = "nodejs";
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 const ALLOWED_SERVICE_TAGS: readonly ServiceTag[] = [
   "general",
@@ -82,6 +77,15 @@ type IssueParse = {
   summary: string;
 };
 
+async function getOpenAIClient() {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return null;
+
+  // ✅ Import only when needed (prevents build-time crash)
+  const { default: OpenAI } = await import("openai");
+  return new OpenAI({ apiKey: key });
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({} as any));
@@ -94,7 +98,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "issueText is required" }, { status: 400 });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    const client = await getOpenAIClient();
+    if (!client) {
       return NextResponse.json(
         { error: "OPENAI_API_KEY is not set on the server" },
         { status: 500 }
@@ -111,10 +116,7 @@ export async function POST(req: Request) {
             "Choose serviceTags and specialtyTags ONLY from the enums in the schema. " +
             "If unsafe (brake failure, overheating, smoke, fuel smell), set urgency=high and drivable=false.",
         },
-        {
-          role: "user",
-          content: `Vehicle: ${year} ${make} ${model}\nIssue: ${issueText}`,
-        },
+        { role: "user", content: `Vehicle: ${year} ${make} ${model}\nIssue: ${issueText}` },
       ],
       response_format: {
         type: "json_schema",
@@ -126,23 +128,14 @@ export async function POST(req: Request) {
             properties: {
               urgency: { type: "string", enum: ["low", "medium", "high"] },
               drivable: { type: "boolean" },
-
-              // ✅ Force tags to your vocabulary (Fix B)
               serviceTags: {
                 type: "array",
-                items: {
-                  type: "string",
-                  enum: ALLOWED_SERVICE_TAGS as unknown as string[],
-                },
+                items: { type: "string", enum: ALLOWED_SERVICE_TAGS as unknown as string[] },
               },
               specialtyTags: {
                 type: "array",
-                items: {
-                  type: "string",
-                  enum: ALLOWED_SPECIALTY_TAGS as unknown as string[],
-                },
+                items: { type: "string", enum: ALLOWED_SPECIALTY_TAGS as unknown as string[] },
               },
-
               summary: { type: "string" },
             },
             required: ["urgency", "drivable", "serviceTags", "specialtyTags", "summary"],
@@ -155,18 +148,11 @@ export async function POST(req: Request) {
     const parsed = safeJsonParse(raw);
 
     if (!parsed) {
-      return NextResponse.json(
-        { error: "AI returned invalid JSON", raw },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "AI returned invalid JSON", raw }, { status: 500 });
     }
 
-    // Safety net: sanitize even though schema should constrain tags
     const serviceTags = sanitizeTags<ServiceTag>(parsed.serviceTags, ALLOWED_SERVICE_TAGS);
-    const specialtyTags = sanitizeTags<SpecialtyTag>(
-      parsed.specialtyTags,
-      ALLOWED_SPECIALTY_TAGS
-    );
+    const specialtyTags = sanitizeTags<SpecialtyTag>(parsed.specialtyTags, ALLOWED_SPECIALTY_TAGS);
 
     const normalized: IssueParse = {
       urgency: parsed.urgency ?? "medium",
@@ -175,9 +161,6 @@ export async function POST(req: Request) {
       specialtyTags,
       summary: String(parsed.summary ?? ""),
     };
-
-    console.log("PARSED AI:", parsed);
-    console.log("SANITIZED TAGS:", { serviceTags, specialtyTags });
 
     const scored = REGINA_SHOPS.map((shop) => {
       const { serviceTags: sTags, specialtyTags: spTags } = deriveTags(shop);
