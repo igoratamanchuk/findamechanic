@@ -79,11 +79,21 @@ type IssueParse = {
 
 async function getOpenAIClient() {
   const key = process.env.OPENAI_API_KEY;
+
+  // 🔍 DEBUG: env visibility
+  console.log("DEBUG: OPENAI_API_KEY present =", Boolean(key));
+  console.log("DEBUG: VERCEL_ENV =", process.env.VERCEL_ENV);
+  console.log("DEBUG: COMMIT =", process.env.VERCEL_GIT_COMMIT_SHA);
+
   if (!key) return null;
 
-  // ✅ Import only when needed (prevents build-time crash)
-  const { default: OpenAI } = await import("openai");
-  return new OpenAI({ apiKey: key });
+  try {
+    const OpenAI = (await import("openai")).default;
+    return new OpenAI({ apiKey: key });
+  } catch (err: any) {
+    console.error("DEBUG: FAILED TO IMPORT OPENAI:", err?.message ?? err);
+    return null;
+  }
 }
 
 export async function POST(req: Request) {
@@ -99,15 +109,24 @@ export async function POST(req: Request) {
     }
 
     const client = await getOpenAIClient();
+
+    // 🔴 EARLY DEBUG EXIT
     if (!client) {
       return NextResponse.json(
-        { error: "OPENAI_API_KEY is not set on the server" },
+        {
+          error: "AI client not available",
+          debug: {
+            hasOpenAIKey: Boolean(process.env.OPENAI_API_KEY),
+            vercelEnv: process.env.VERCEL_ENV ?? null,
+            commit: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
+          },
+        },
         { status: 500 }
       );
     }
 
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-5-mini",
       messages: [
         {
           role: "system",
@@ -116,7 +135,10 @@ export async function POST(req: Request) {
             "Choose serviceTags and specialtyTags ONLY from the enums in the schema. " +
             "If unsafe (brake failure, overheating, smoke, fuel smell), set urgency=high and drivable=false.",
         },
-        { role: "user", content: `Vehicle: ${year} ${make} ${model}\nIssue: ${issueText}` },
+        {
+          role: "user",
+          content: `Vehicle: ${year} ${make} ${model}\nIssue: ${issueText}`,
+        },
       ],
       response_format: {
         type: "json_schema",
@@ -148,11 +170,17 @@ export async function POST(req: Request) {
     const parsed = safeJsonParse(raw);
 
     if (!parsed) {
-      return NextResponse.json({ error: "AI returned invalid JSON", raw }, { status: 500 });
+      return NextResponse.json(
+        { error: "AI returned invalid JSON", raw },
+        { status: 500 }
+      );
     }
 
     const serviceTags = sanitizeTags<ServiceTag>(parsed.serviceTags, ALLOWED_SERVICE_TAGS);
-    const specialtyTags = sanitizeTags<SpecialtyTag>(parsed.specialtyTags, ALLOWED_SPECIALTY_TAGS);
+    const specialtyTags = sanitizeTags<SpecialtyTag>(
+      parsed.specialtyTags,
+      ALLOWED_SPECIALTY_TAGS
+    );
 
     const normalized: IssueParse = {
       urgency: parsed.urgency ?? "medium",
