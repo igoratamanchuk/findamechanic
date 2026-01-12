@@ -1,0 +1,61 @@
+// data/shops/types.ts
+
+export type ServiceTag =
+  | "general"
+  | "maintenance"
+  | "oil_change"
+  | "diagnostics"
+  | "brakes"
+  | "suspension"
+  | "alignment"
+  | "tires"
+  | "ac"
+  | "engine"
+  | "transmission"
+  | "exhaust"
+  | "electrical"
+  | "body"
+  | "collision"
+  | "fleet"
+  | "commercial"
+  | "diesel"
+  | "performance"
+  | "restoration"
+  | "truck"
+  | "trailer";
+
+export type SpecialtyTag =
+  | "domestic"
+  | "import"
+  | "european"
+  | "asian"
+  | "ford"
+  | "gm"
+  | "toyota"
+  | "honda"
+  | "mercedes"
+  | "bmw"
+  | "vw_audi"
+  | "fleet"
+  | "commercial"
+  | "electrical"
+  | "body"
+  | "performance"
+  | "restoration";
+
+export type Shop = {
+  slug: string;
+  name: string;
+  address: string;
+  phone?: string;
+  website?: string;
+  neighborhood?: string;
+
+  services: string[];
+  specialties: string[];
+
+  serviceTags?: ServiceTag[];
+  specialtyTags?: SpecialtyTag[];
+
+  description?: string;
+};

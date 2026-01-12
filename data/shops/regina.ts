@@ -1,22 +1,11 @@
-export type Shop = {
-  slug: string;
-  name: string;
-  address: string;
-  phone?: string;
-  website?: string;
-  neighborhood?: string;
-  services: string[];
-  specialties: string[];
-  description?: string;
-};
+import type { City, Shop } from "./types";
 
-export const REGINA_CITY = {
+export const REGINA_CITY: City = {
   slug: "regina-sk",
   name: "Regina, SK",
   province: "Saskatchewan",
   country: "Canada",
 };
-
 
 export const REGINA_SHOPS: Shop[] = [
   {
@@ -85,14 +74,15 @@ export const REGINA_SHOPS: Shop[] = [
     name: "Whitmore Park Napa AutoCare",
     address: "4415 Albert St, Regina, SK S4S 6B6",
     phone: "306-586-4228",
-    website: "https://www.yellowpages.ca/bus/Saskatchewan/Regina/Whitmore-Park-Napa-AutoCare/7945002.html",
+    website:
+      "https://www.yellowpages.ca/bus/Saskatchewan/Regina/Whitmore-Park-Napa-AutoCare/7945002.html",
     neighborhood: "South Regina",
     services: ["Auto repair", "Maintenance", "Diagnostics"],
     specialties: ["Domestic", "Import"],
     description: "NAPA AutoCare listing for Whitmore Park area.",
   },
 
-  // Additional Regina entries (address verified from AAA listing; add phone/website later if you want)
+  // AAA list (add phone/website later)
   {
     slug: "mainline-fleet-service",
     name: "Mainline Fleet Service Ltd.",
@@ -117,8 +107,8 @@ export const REGINA_SHOPS: Shop[] = [
     specialties: ["Domestic", "Import"],
     description: "Listed in AAA repair locations for Regina.",
   },
-  
-    {
+
+  {
     slug: "midas-albert-st-n",
     name: "Midas Auto Service Experts",
     address: "149 Albert St N, Regina, SK S4R 3B8",
@@ -163,15 +153,7 @@ export const REGINA_SHOPS: Shop[] = [
     specialties: ["Domestic", "Import"],
     description: "Auto repair and maintenance in Regina.",
   },
-  {
-    slug: "jpl-auto-electric-lorne",
-    name: "JPL Auto Electric",
-    address: "1376 Lorne St, Regina, SK S4R 2K1",
-    phone: "306-359-3447",
-    services: ["Auto electrical", "Diagnostics"],
-    specialties: ["Electrical"],
-    description: "Auto electrical service in Regina.",
-  },
+  
   {
     slug: "bennetts-auto-repair-winnipeg",
     name: "Bennett's Auto Repair",
@@ -263,7 +245,7 @@ export const REGINA_SHOPS: Shop[] = [
     description: "Auto body and collision services in Regina.",
   },
 
-  // CAA Saskatchewan AARS list items (Regina) — good “trusted” set
+  // CAA Saskatchewan AARS list items
   {
     slug: "a-and-b-auto-body",
     name: "A & B Auto Body",
@@ -327,5 +309,9 @@ export const REGINA_SHOPS: Shop[] = [
     specialties: ["Ford"],
     description: "CAA Saskatchewan AARS listing.",
   },
-
 ];
+
+// Optional: fast lookup by slug (useful for /shops/[slug] pages)
+export const REGINA_SHOPS_BY_SLUG: Record<string, Shop> = Object.fromEntries(
+  REGINA_SHOPS.map((s) => [s.slug, s])
+);

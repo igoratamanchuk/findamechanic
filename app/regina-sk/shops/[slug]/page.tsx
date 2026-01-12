@@ -1,4 +1,6 @@
+// app/regina-sk/shops/[slug]/page.tsx
 export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import type { Metadata } from "next";
 
@@ -9,6 +11,45 @@ const SITE_NAME = "FindAMechanic.ca";
 
 function getShop(slug: string) {
   return REGINA_SHOPS.find((s) => s.slug === slug);
+}
+
+function cleanTel(phone: string) {
+  return phone.replace(/[^\d+]/g, "");
+}
+
+function Chip({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center rounded-full border px-3 py-1 text-sm">
+      {label}
+    </span>
+  );
+}
+
+function ActionLink({
+  href,
+  children,
+  external,
+}: {
+  href: string;
+  children: React.ReactNode;
+  external?: boolean;
+}) {
+  const cls =
+    "inline-flex items-center rounded-xl border px-4 py-2 text-sm font-medium hover:bg-gray-50";
+
+  if (external) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" className={cls}>
+        {children}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={href} className={cls}>
+      {children}
+    </Link>
+  );
 }
 
 export async function generateMetadata({
@@ -64,13 +105,16 @@ export default async function ShopPage({
   const { slug } = await params;
   const shop = getShop(slug);
 
+  const backHref = `/cities/${REGINA_CITY.slug}`;
+
   if (!shop) {
     return (
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 900 }}>Shop not found</h1>
-        <p style={{ opacity: 0.8, marginTop: 8 }}>Slug: {slug}</p>
-        <div style={{ marginTop: 14 }}>
-          <Link href={`/cities/${REGINA_CITY.slug}`} style={{ textDecoration: "none" }}>
+      <main className="mx-auto max-w-3xl px-4 py-10">
+        <h1 className="text-2xl font-black">Shop not found</h1>
+        <p className="mt-2 text-sm text-gray-600">Slug: {slug}</p>
+
+        <div className="mt-6">
+          <Link href={backHref} className="hover:underline">
             ← Back to {REGINA_CITY.name}
           </Link>
         </div>
@@ -83,106 +127,64 @@ export default async function ShopPage({
   )}`;
 
   return (
-    <main style={{ maxWidth: 900, margin: "0 auto", padding: 16 }}>
-      <Link href={`/cities/${REGINA_CITY.slug}`} style={{ textDecoration: "none" }}>
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      {/* Back */}
+      <Link href={backHref} className="hover:underline">
         ← Back to {REGINA_CITY.name}
       </Link>
 
-      <h1 style={{ fontSize: 34, fontWeight: 900, marginTop: 12 }}>
-        {shop.name}
-      </h1>
+      {/* Title */}
+      <h1 className="mt-4 text-4xl font-black tracking-tight">{shop.name}</h1>
+      <p className="mt-2 text-gray-700">{shop.address}</p>
 
-      <div style={{ marginTop: 8, opacity: 0.85 }}>{shop.address}</div>
-
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
+      {/* Actions */}
+      <div className="mt-6 flex flex-wrap gap-3">
         {shop.phone ? (
           <a
-            href={`tel:${shop.phone}`}
-            style={{
-              padding: "10px 14px",
-              borderRadius: 12,
-              border: "1px solid #ddd",
-              textDecoration: "none",
-            }}
+            href={`tel:${cleanTel(shop.phone)}`}
+            className="inline-flex items-center rounded-xl border px-4 py-2 text-sm font-medium hover:bg-gray-50"
           >
             Call: {shop.phone}
           </a>
         ) : null}
 
         {shop.website ? (
-          <a
-            href={shop.website}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              padding: "10px 14px",
-              borderRadius: 12,
-              border: "1px solid #ddd",
-              textDecoration: "none",
-            }}
-          >
+          <ActionLink href={shop.website} external>
             Website
-          </a>
+          </ActionLink>
         ) : null}
 
-        <a
-          href={mapsUrl}
-          target="_blank"
-          rel="noreferrer"
-          style={{
-            padding: "10px 14px",
-            borderRadius: 12,
-            border: "1px solid #ddd",
-            textDecoration: "none",
-          }}
-        >
+        <ActionLink href={mapsUrl} external>
           Get directions
-        </a>
+        </ActionLink>
       </div>
 
+      {/* About */}
       {shop.description ? (
-        <section style={{ marginTop: 18 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 900 }}>About</h2>
-          <p style={{ marginTop: 8, lineHeight: 1.6 }}>{shop.description}</p>
+        <section className="mt-8">
+          <h2 className="text-lg font-black">About</h2>
+          <p className="mt-2 leading-7 text-gray-700">{shop.description}</p>
         </section>
       ) : null}
 
-      <section style={{ marginTop: 18 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 900 }}>Services</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+      {/* Services */}
+      <section className="mt-8">
+        <h2 className="text-lg font-black">Services</h2>
+        <div className="mt-3 flex flex-wrap gap-2">
           {shop.services.map((x) => (
-            <span
-              key={x}
-              style={{
-                padding: "6px 10px",
-                borderRadius: 999,
-                border: "1px solid #eee",
-              }}
-            >
-              {x}
-            </span>
+            <Chip key={x} label={x} />
           ))}
         </div>
       </section>
 
-      <section style={{ marginTop: 18 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 900 }}>Specialties</h2>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+      {/* Specialties */}
+      <section className="mt-8">
+        <h2 className="text-lg font-black">Specialties</h2>
+        <div className="mt-3 flex flex-wrap gap-2">
           {shop.specialties.length ? (
-            shop.specialties.map((x) => (
-              <span
-                key={x}
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  border: "1px solid #eee",
-                }}
-              >
-                {x}
-              </span>
-            ))
+            shop.specialties.map((x) => <Chip key={x} label={x} />)
           ) : (
-            <span style={{ opacity: 0.7 }}>Not specified</span>
+            <span className="text-sm text-gray-600">Not specified</span>
           )}
         </div>
       </section>
